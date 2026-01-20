@@ -1,0 +1,74 @@
+package com.example.teamworktracker.ui_screens.team
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun JoinTeamScreen(
+    onJoined: () -> Unit,
+    onBack: () -> Unit
+) {
+    var teamIdText by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf<String?>(null) }
+
+    Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("Join Team") }
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            OutlinedTextField(
+                value = teamIdText,
+                onValueChange = { teamIdText = it },
+                label = { Text("Team ID") },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+
+            if (error != null) {
+                Text(
+                    text = error!!,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Button(
+                onClick = {
+                    val id = teamIdText.toIntOrNull()
+                    if (id == null) {
+                        error = "Enter a valid numeric team ID"
+                    } else {
+                        error = null
+                        // Later: POST /api/v1/teams/join with { "team_id": id }
+                        onJoined()
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Join")
+            }
+
+            TextButton(onClick = onBack) {
+                Text("Cancel")
+            }
+        }
+    }
+}
