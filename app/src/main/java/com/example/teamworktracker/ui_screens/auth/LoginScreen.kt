@@ -18,6 +18,13 @@ fun LoginScreen(
     val email by viewModel.email
     val password by viewModel.password
     val errorMessage by viewModel.errorMessage
+    val state by viewModel.state.collectAsState()
+
+    LaunchedEffect(state.success) {
+        if (state.success) {
+            onLoginSuccess()
+        }
+    }
 
     Scaffold { padding ->
         Column(
@@ -40,7 +47,8 @@ fun LoginScreen(
                 value = email,
                 onValueChange = { viewModel.email.value = it },
                 label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !state.loading
             )
 
             OutlinedTextField(
@@ -48,12 +56,13 @@ fun LoginScreen(
                 onValueChange = { viewModel.password.value = it },
                 label = { Text("Password") },
                 visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !state.loading
             )
 
-            if (errorMessage != null) {
+            errorMessage?.let {
                 Text(
-                    text = errorMessage ?: "",
+                    text = it,
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier
                         .padding(top = 8.dp)
@@ -63,19 +72,20 @@ fun LoginScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Button(
-                onClick = {
-                    val success = viewModel.login()
-                    if (success) onLoginSuccess()
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Login")
+            if (state.loading) {
+                CircularProgressIndicator()
+            } else {
+                Button(
+                    onClick = { viewModel.login() },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Login")
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            TextButton(onClick = onGoToRegister) {
+            TextButton(onClick = onGoToRegister, enabled = !state.loading) {
                 Text("Don't have an account? Register")
             }
         }

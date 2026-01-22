@@ -29,10 +29,33 @@ class TeamsViewModel(
                 val teams = repo.getMyTeams()
                 _state.value = _state.value.copy(isLoading = false, teams = teams)
             } catch (e: Exception) {
-                _state.value = _state.value.copy(
-                    isLoading = false,
-                    error = e.message ?: "Failed to load teams"
-                )
+                _state.value = _state.value.copy(isLoading = false, error = e.message ?: "Failed to load teams")
+            }
+        }
+    }
+
+    fun createTeam(name: String, description: String, onSuccess: () -> Unit = {}) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isLoading = true, error = null)
+            try {
+                repo.createTeam(name, description)
+                loadMyTeams()
+                onSuccess()
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(isLoading = false, error = e.message ?: "Failed to create team")
+            }
+        }
+    }
+
+    fun joinTeam(teamId: Int, onSuccess: () -> Unit = {}) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isLoading = true, error = null)
+            try {
+                repo.joinTeam(teamId)
+                loadMyTeams()
+                onSuccess()
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(isLoading = false, error = e.message ?: "Failed to join team")
             }
         }
     }

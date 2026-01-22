@@ -12,7 +12,6 @@ class AuthInterceptor(
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val original = chain.request()
-
         val token = runBlocking { sessionManager.accessToken.first() }
 
         val request = if (!token.isNullOrBlank()) {

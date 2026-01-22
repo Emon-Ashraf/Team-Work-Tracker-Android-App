@@ -7,23 +7,22 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JoinTeamScreen(
     onJoined: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    teamsViewModel: TeamsViewModel = viewModel() // ✅ ADD THIS
 ) {
     var teamIdText by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
 
+    val uiState by teamsViewModel.state.collectAsState() // ✅ ADD THIS
+
     Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Join Team") }
-            )
-        }
+        topBar = { CenterAlignedTopAppBar(title = { Text("Join Team") }) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -32,6 +31,7 @@ fun JoinTeamScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+
             OutlinedTextField(
                 value = teamIdText,
                 onValueChange = { teamIdText = it },
@@ -40,15 +40,14 @@ fun JoinTeamScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-
-            if (error != null) {
-                Text(
-                    text = error!!,
-                    color = MaterialTheme.colorScheme.error
-                )
+            val shownError = error ?: uiState.error
+            if (shownError != null) {
+                Text(text = shownError, color = MaterialTheme.colorScheme.error)
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            if (uiState.isLoading) {
+                CircularProgressIndicator()
+            }
 
             Button(
                 onClick = {
@@ -57,11 +56,16 @@ fun JoinTeamScreen(
                         error = "Enter a valid numeric team ID"
                     } else {
                         error = null
-                        // Later: POST /api/v1/teams/join with { "team_id": id }
-                        onJoined()
+
+                        // ✅ REAL API CALL HERE
+                        teamsViewModel.joinTeam(
+                            teamId = id,
+                            onSuccess = onJoined
+                        )
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !uiState.isLoading
             ) {
                 Text("Join")
             }

@@ -11,7 +11,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 
 object ApiClient {
 
-    private lateinit var retrofitInstance: Retrofit
+    private var retrofitInstance: Retrofit? = null
 
     fun init(context: Context) {
         val sessionManager = SessionManager(context)
@@ -36,5 +36,6 @@ object ApiClient {
             .build()
     }
 
-    fun retrofit(): Retrofit = retrofitInstance
+    fun retrofit(): Retrofit =
+        retrofitInstance ?: error("ApiClient not initialized. Call ApiClient.init(context) in MainActivity.")
 }

@@ -5,22 +5,24 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateTeamScreen(
     onTeamCreated: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    teamsViewModel: TeamsViewModel = viewModel() // ✅ ADD THIS
 ) {
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
 
+    val uiState by teamsViewModel.state.collectAsState() // ✅ ADD THIS
+
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Create Team") }
-            )
+            CenterAlignedTopAppBar(title = { Text("Create Team") })
         }
     ) { padding ->
         Column(
@@ -30,6 +32,7 @@ fun CreateTeamScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
@@ -44,14 +47,15 @@ fun CreateTeamScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            if (error != null) {
-                Text(
-                    text = error!!,
-                    color = MaterialTheme.colorScheme.error
-                )
+            // ✅ Show error from screen validation OR API
+            val shownError = error ?: uiState.error
+            if (shownError != null) {
+                Text(text = shownError, color = MaterialTheme.colorScheme.error)
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            if (uiState.isLoading) {
+                CircularProgressIndicator()
+            }
 
             Button(
                 onClick = {
@@ -59,11 +63,17 @@ fun CreateTeamScreen(
                         error = "Name is required"
                     } else {
                         error = null
-                        // Later: POST /api/v1/teams/ with { name, description }
-                        onTeamCreated()
+
+                        // ✅ HERE is the REAL API CALL
+                        teamsViewModel.createTeam(
+                            name = name.trim(),
+                            description = description.trim(),
+                            onSuccess = onTeamCreated
+                        )
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !uiState.isLoading
             ) {
                 Text("Create")
             }
