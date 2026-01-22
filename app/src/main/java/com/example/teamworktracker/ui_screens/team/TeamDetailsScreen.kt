@@ -1,10 +1,12 @@
 package com.example.teamworktracker.ui_screens.team
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -14,19 +16,33 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 fun TeamDetailsScreen(
     teamId: Int,
     onBack: () -> Unit,
-    onProjectClick: (Int) -> Unit, // keep for later
-    onTaskClick: (Int) -> Unit,    // keep for later
+
+    // ✅ This should navigate to Projects list for this team:
+    // navController.navigate(Screen.Projects.createRoute(teamId))
+    onOpenProjects: (Int) -> Unit,
+
+    // ✅ Keep for later (task list / task details from this team)
+    onTaskClick: (Int) -> Unit,
+
     viewModel: TeamDetailsViewModel = viewModel()
 ) {
     val uiState by viewModel.state.collectAsState()
 
-    // ✅ REAL API LOAD HERE
     LaunchedEffect(teamId) {
         viewModel.load(teamId)
     }
 
     Scaffold(
-        topBar = { CenterAlignedTopAppBar(title = { Text("Team Details") }) }
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("Team Details") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Text("←")
+                    }
+                }
+            )
+        }
     ) { padding ->
 
         when {
@@ -35,8 +51,10 @@ fun TeamDetailsScreen(
                     modifier = Modifier
                         .padding(padding)
                         .fillMaxSize(),
-                    contentAlignment = androidx.compose.ui.Alignment.Center
-                ) { CircularProgressIndicator() }
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
             }
 
             uiState.error != null -> {
@@ -48,7 +66,9 @@ fun TeamDetailsScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(uiState.error!!, color = MaterialTheme.colorScheme.error)
-                    TextButton(onClick = onBack) { Text("Back") }
+                    Button(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
+                        Text("Back")
+                    }
                 }
             }
 
@@ -61,7 +81,9 @@ fun TeamDetailsScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text("Team not found", style = MaterialTheme.typography.titleMedium)
-                    TextButton(onClick = onBack) { Text("Back") }
+                    Button(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
+                        Text("Back")
+                    }
                 }
             }
 
@@ -78,16 +100,32 @@ fun TeamDetailsScreen(
                 ) {
 
                     // === Team info ===
-                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(team.name, style = MaterialTheme.typography.headlineSmall)
-                        Text(team.description, style = MaterialTheme.typography.bodyMedium)
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        elevation = CardDefaults.cardElevation(2.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Text(team.name, style = MaterialTheme.typography.headlineSmall)
+                            Text(team.description, style = MaterialTheme.typography.bodyMedium)
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                            Divider(modifier = Modifier.padding(vertical = 4.dp))
 
-                        Text("Team ID: ${team.id}")
-                        Text("Created by: ${team.createdBy}")
-                        Text("Created at: ${team.createdAt}")
-                        Text("Updated at: ${team.updatedAt}")
+                            Text("Team ID: ${team.id}")
+                            Text("Created by: ${team.createdBy}")
+                            Text("Created at: ${team.createdAt}")
+                            Text("Updated at: ${team.updatedAt}")
+                        }
+                    }
+
+                    // ✅ Main action for this screen
+                    Button(
+                        onClick = { onOpenProjects(team.id) },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Open Projects")
                     }
 
                     Divider()
@@ -103,7 +141,10 @@ fun TeamDetailsScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 elevation = CardDefaults.cardElevation(2.dp)
                             ) {
-                                Column(modifier = Modifier.padding(12.dp)) {
+                                Column(
+                                    modifier = Modifier.padding(12.dp),
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
                                     Text("User ID: ${m.userId}", style = MaterialTheme.typography.titleSmall)
                                     Text("Joined: ${m.joinedAt}", style = MaterialTheme.typography.bodySmall)
                                 }
@@ -113,13 +154,18 @@ fun TeamDetailsScreen(
 
                     Divider()
 
-                    // Projects/tasks area will be wired when we implement Projects/Tasks APIs.
+                    // Optional placeholder (until you wire tasks by team)
                     Text(
-                        "Projects and tasks will appear here after Projects API integration.",
+                        text = "Tasks for this team will appear here after Tasks API integration.",
                         style = MaterialTheme.typography.bodySmall
                     )
 
-                    TextButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    OutlinedButton(
+                        onClick = onBack,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
                         Text("Back")
                     }
                 }

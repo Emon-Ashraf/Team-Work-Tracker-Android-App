@@ -64,42 +64,51 @@ fun AppNavHost() {
         composable(Screen.Home.route) {
             HomeScreen(
                 onOpenMyTasks = { navController.navigate(Screen.MyTasks.route) },
-                onOpenProjects = { navController.navigate(Screen.Projects.route) },
                 onOpenTeams = { navController.navigate(Screen.Teams.route) }
             )
+
         }
 
 
 
         //project section
-        composable(Screen.Projects.route) {
+        // ✅ Projects list for a team
+        composable(
+            route = Screen.Projects.route,
+            arguments = listOf(navArgument("teamId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val teamId = backStackEntry.arguments?.getInt("teamId") ?: return@composable
+
             ProjectsScreen(
-                onCreateProject = { navController.navigate(Screen.CreateProject.route) },
+                teamId = teamId,
+                onCreateProject = { navController.navigate(Screen.CreateProject.createRoute(teamId)) },
                 onProjectClick = { projectId ->
                     navController.navigate(Screen.ProjectDetails.createRoute(projectId))
                 }
             )
         }
 
+// ✅ Create project for a team
+        composable(
+            route = Screen.CreateProject.route,
+            arguments = listOf(navArgument("teamId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val teamId = backStackEntry.arguments?.getInt("teamId") ?: return@composable
 
-        composable(Screen.CreateProject.route) {
             CreateProjectScreen(
-                onProjectCreated = {
-                    navController.popBackStack() // back to Projects
-                },
-                onBack = {
-                    navController.popBackStack()
-                }
+                teamId = teamId,
+                onProjectCreated = { navController.popBackStack() },
+                onBack = { navController.popBackStack() }
             )
         }
 
+// ✅ Project details
         composable(
             route = Screen.ProjectDetails.route,
-            arguments = listOf(
-                navArgument("projectId") { type = NavType.IntType }
-            )
+            arguments = listOf(navArgument("projectId") { type = NavType.IntType })
         ) { backStackEntry ->
             val projectId = backStackEntry.arguments?.getInt("projectId") ?: -1
+
             ProjectDetailsScreen(
                 projectId = projectId,
                 onBack = { navController.popBackStack() },
@@ -108,6 +117,7 @@ fun AppNavHost() {
                 }
             )
         }
+
 
 
 
@@ -151,8 +161,8 @@ fun AppNavHost() {
             TeamDetailsScreen(
                 teamId = teamId,
                 onBack = { navController.popBackStack() },
-                onProjectClick = { projectId ->
-                    navController.navigate(Screen.ProjectDetails.createRoute(projectId))
+                onOpenProjects = { teamId ->
+                    navController.navigate(Screen.Projects.createRoute(teamId))
                 },
                 onTaskClick = { taskId ->
                     navController.navigate(Screen.TaskDetails.createRoute(taskId))

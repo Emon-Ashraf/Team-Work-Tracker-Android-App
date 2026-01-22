@@ -17,11 +17,17 @@ sealed class Screen(val route: String) {
     }
 
 
-    //Project part
-    object Projects : Screen("projects")
-    object CreateProject : Screen("create_project")
-    object ProjectDetails : Screen("project_details/{projectId}") {
-        fun createRoute(projectId: Int) = "project_details/$projectId"
+    //Project part (✅ team-based)
+    object Projects : Screen("projects/{teamId}") {
+        fun createRoute(teamId: Int) = "projects/$teamId"
+    }
+
+    object CreateProject : Screen("createProject/{teamId}") {
+        fun createRoute(teamId: Int) = "createProject/$teamId"
+    }
+
+    object ProjectDetails : Screen("projectDetails/{projectId}") {
+        fun createRoute(projectId: Int) = "projectDetails/$projectId"
     }
 
 

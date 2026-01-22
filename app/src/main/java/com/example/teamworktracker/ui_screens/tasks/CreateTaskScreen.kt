@@ -7,12 +7,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateTaskScreen(
     onTaskCreated: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    viewModel: MyTasksViewModel = viewModel()
 ) {
     var title by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
@@ -27,14 +29,14 @@ fun CreateTaskScreen(
     var selectedStatus by remember { mutableStateOf("new") }
     var statusExpanded by remember { mutableStateOf(false) }
 
-    var dueDateText by remember { mutableStateOf("") } // ISO string or simple date text
-    var error by remember { mutableStateOf<String?>(null) }
+    var dueDateText by remember { mutableStateOf("") } // backend expects string; use ISO datetime ideally
+    var localError by remember { mutableStateOf<String?>(null) }
+
+    val uiState by viewModel.state.collectAsState()
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Create Task") }
-            )
+            CenterAlignedTopAppBar(title = { Text("Create Task") })
         }
     ) { padding ->
         Column(
@@ -138,15 +140,18 @@ fun CreateTaskScreen(
             OutlinedTextField(
                 value = dueDateText,
                 onValueChange = { dueDateText = it },
-                label = { Text("Due date (ISO or simple)") },
-                modifier = Modifier.fillMaxWidth()
+                label = { Text("Due date (ISO recommended)") },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text("2026-01-30T10:00:00") }
             )
 
-            if (error != null) {
-                Text(
-                    text = error!!,
-                    color = MaterialTheme.colorScheme.error
-                )
+            val shownError = localError ?: uiState.error
+            if (shownError != null) {
+                Text(text = shownError, color = MaterialTheme.colorScheme.error)
+            }
+
+            if (uiState.isLoading) {
+                CircularProgressIndicator()
             }
 
             Button(
@@ -154,33 +159,36 @@ fun CreateTaskScreen(
                     val projectId = projectIdText.toIntOrNull()
                     val assignedTo = assignedToText.toIntOrNull()
 
-                    if (title.isBlank()) {
-                        error = "Title is required"
-                    } else if (projectId == null) {
-                        error = "Valid project ID is required"
-                    } else if (assignedTo == null) {
-                        error = "Valid assignee ID is required"
-                    } else {
-                        error = null
-                        // Later: POST /api/v1/tasks/ with body:
-                        // {
-                        //   "title": title,
-                        //   "description": description,
-                        //   "project_id": projectId,
-                        //   "assigned_to": assignedTo,
-                        //   "priority": selectedPriority,
-                        //   "status": selectedStatus,
-                        //   "due_date": dueDateText
-                        // }
-                        onTaskCreated()
+                    when {
+                        title.isBlank() -> localError = "Title is required"
+                        projectId == null -> localError = "Valid project ID is required"
+                        assignedTo == null -> localError = "Valid assignee ID is required"
+                        dueDateText.isBlank() -> localError = "Due date is required"
+                        else -> {
+                            localError = null
+                            viewModel.createTask(
+                                projectId = projectId,
+                                assignedTo = assignedTo,
+                                title = title.trim(),
+                                description = description.trim(),
+                                priority = selectedPriority,
+                                status = selectedStatus,
+                                dueDate = dueDateText.trim(),
+                                onSuccess = onTaskCreated
+                            )
+                        }
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !uiState.isLoading
             ) {
                 Text("Create Task")
             }
 
-            TextButton(onClick = onBack) {
+            TextButton(
+                onClick = onBack,
+                enabled = !uiState.isLoading
+            ) {
                 Text("Cancel")
             }
         }

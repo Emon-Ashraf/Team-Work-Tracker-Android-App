@@ -11,23 +11,22 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun HomeScreen(
     onOpenMyTasks: () -> Unit,
-    onOpenProjects: () -> Unit,
     onOpenTeams: () -> Unit
 ) {
     Scaffold(
         topBar = {
-            SmallTopAppBar(
+            CenterAlignedTopAppBar(
                 title = { Text("Team Work Tracker") }
             )
         }
     ) { padding ->
+
         Column(
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
             Text(
@@ -36,39 +35,69 @@ fun HomeScreen(
             )
 
             Text(
-                text = "Choose where you want to work:",
-                style = MaterialTheme.typography.bodyMedium
+                text = "Pick where you want to work:",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
-            // My Tasks
-            Button(
-                onClick = onOpenMyTasks,
-                modifier = Modifier.fillMaxWidth()
+            // Teams card (primary)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(3.dp),
+                onClick = onOpenTeams
             ) {
-                Text("My Tasks")
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text("Teams", style = MaterialTheme.typography.titleLarge)
+                    Text(
+                        "Open your teams and manage projects inside them.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Button(onClick = onOpenTeams, modifier = Modifier.align(Alignment.End)) {
+                        Text("Open")
+                    }
+                }
             }
 
-            // Projects
-            OutlinedButton(
-                onClick = onOpenProjects,
-                modifier = Modifier.fillMaxWidth()
+            // My Tasks card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                elevation = CardDefaults.cardElevation(3.dp),
+                onClick = onOpenMyTasks
             ) {
-                Text("Projects")
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text("My Tasks", style = MaterialTheme.typography.titleLarge)
+                    Text(
+                        "See tasks assigned to you across all teams.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    OutlinedButton(
+                        onClick = onOpenMyTasks,
+                        modifier = Modifier.align(Alignment.End)
+                    ) {
+                        Text("Open")
+                    }
+                }
             }
 
-            // Teams
-            OutlinedButton(
-                onClick = onOpenTeams,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Teams")
-            }
+            Spacer(modifier = Modifier.height(8.dp))
 
-            // Later we can add quick stats here:
-            // - tasks due today
-            // - active sprints, etc.
+            Text(
+                text = "Tip: Projects belong to Teams. Open a team → Open Projects.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }
