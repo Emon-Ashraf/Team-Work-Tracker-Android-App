@@ -1,11 +1,11 @@
-package com.example.teamworktracker.data
+package com.example.teamworktracker.data.testRepo
 
 
 //for temporary
 import com.example.teamworktracker.domain.models.Team
 import com.example.teamworktracker.domain.models.TeamMember
 
-object FakeTeamRepository {
+object TestTeamRepository {
 
     fun getMyTeams(): List<Team> {
         // shape similar to /api/v1/teams/my-teams

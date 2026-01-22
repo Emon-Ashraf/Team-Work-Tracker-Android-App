@@ -5,30 +5,31 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddLinkAttachmentScreen(
     taskId: Int,
     onAttachmentAdded: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    viewModel: AddAttachmentViewModel = viewModel()
 ) {
+    val uiState by viewModel.state.collectAsState()
+
     var description by remember { mutableStateOf("") }
     var url by remember { mutableStateOf("") }
-    var error by remember { mutableStateOf<String?>(null) }
+    var localError by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(uiState.done) {
+        if (uiState.done) onAttachmentAdded()
+    }
 
     Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Add Link Attachment") }
-            )
-        }
+        topBar = { CenterAlignedTopAppBar(title = { Text("Add Link Attachment") }) }
     ) { padding ->
         Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .padding(16.dp),
+            modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
@@ -48,31 +49,32 @@ fun AddLinkAttachmentScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            if (error != null) {
-                Text(
-                    text = error!!,
-                    color = MaterialTheme.colorScheme.error
-                )
+            val shownError = localError ?: uiState.error
+            if (shownError != null) {
+                Text(shownError, color = MaterialTheme.colorScheme.error)
             }
 
             Button(
                 onClick = {
                     if (url.isBlank()) {
-                        error = "URL cannot be empty"
-                    } else {
-                        error = null
-                        // Later: POST /tasks/{task_id}/attachments/link with { description, file_url: url }
-                        onAttachmentAdded()
+                        localError = "URL cannot be empty"
+                        return@Button
                     }
+                    localError = null
+
+                    viewModel.addLink(
+                        taskId = taskId,
+                        url = url.trim(),
+                        description = description.trim()
+                    )
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !uiState.isLoading
             ) {
-                Text("Add Link")
+                Text(if (uiState.isLoading) "Adding..." else "Add Link")
             }
 
-            TextButton(onClick = onBack) {
-                Text("Cancel")
-            }
+            TextButton(onClick = onBack) { Text("Cancel") }
         }
     }
 }

@@ -1,13 +1,13 @@
-package com.example.teamworktracker.data
+package com.example.teamworktracker.data.testRepo
 
-import com.example.teamworktracker.domain.models.Attachment
+import com.example.teamworktracker.domain.models.TaskAttachment
 
-object FakeAttachmentRepository {
+object TestAttachmentRepository {
 
     // Simulate GET /api/v1/tasks/{task_id}/attachments
-    fun getAttachmentsForTask(taskId: Int): List<Attachment> {
+    fun getAttachmentsForTask(taskId: Int): List<TaskAttachment> {
         return listOf(
-            Attachment(
+            TaskAttachment(
                 id = 1,
                 taskId = taskId,
                 userId = 10,
@@ -20,7 +20,7 @@ object FakeAttachmentRepository {
                 fileType = "link",
                 uploadedAt = "2025-01-10T10:00:00Z"
             ),
-            Attachment(
+            TaskAttachment(
                 id = 2,
                 taskId = taskId,
                 userId = 11,

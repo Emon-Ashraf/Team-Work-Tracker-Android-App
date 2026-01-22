@@ -1,9 +1,9 @@
-package com.example.teamworktracker.data
+package com.example.teamworktracker.data.testRepo
 
 import com.example.teamworktracker.domain.models.Project
 import com.example.teamworktracker.domain.models.ProjectStatus
 
-object FakeProjectRepository {
+object TestProjectRepository {
 
     fun getMyProjects(): List<Project> {
         // shape similar to GET /api/v1/projects/

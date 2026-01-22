@@ -1,13 +1,13 @@
-package com.example.teamworktracker.data
+package com.example.teamworktracker.data.testRepo
 
-import com.example.teamworktracker.domain.models.Comment
+import com.example.teamworktracker.domain.models.TaskComment
 
-object FakeCommentRepository {
+object TestCommentRepository {
 
-    fun getCommentsForTask(taskId: Int): List<Comment> {
+    fun getCommentsForTask(taskId: Int): List<TaskComment> {
         // Simulate GET /api/v1/tasks/{task_id}/comments
         return listOf(
-            Comment(
+            TaskComment(
                 id = 1,
                 taskId = taskId,
                 userId = 10,
@@ -15,7 +15,7 @@ object FakeCommentRepository {
                 createdAt = "2025-01-10T09:10:00Z",
                 updatedAt = "2025-01-10T09:10:00Z"
             ),
-            Comment(
+            TaskComment(
                 id = 2,
                 taskId = taskId,
                 userId = 11,
@@ -23,7 +23,7 @@ object FakeCommentRepository {
                 createdAt = "2025-01-11T15:25:00Z",
                 updatedAt = "2025-01-11T15:25:00Z"
             ),
-            Comment(
+            TaskComment(
                 id = 3,
                 taskId = taskId,
                 userId = 10,

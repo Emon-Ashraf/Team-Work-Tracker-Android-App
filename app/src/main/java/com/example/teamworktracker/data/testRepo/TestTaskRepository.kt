@@ -1,8 +1,8 @@
-package com.example.teamworktracker.data
+package com.example.teamworktracker.data.testRepo
 
 import com.example.teamworktracker.domain.models.*
 
-object FakeTaskRepository {
+object TestTaskRepository {
 
     // Simulates GET /api/v1/tasks/my-tasks
     fun getMyTasks(): List<Task> {

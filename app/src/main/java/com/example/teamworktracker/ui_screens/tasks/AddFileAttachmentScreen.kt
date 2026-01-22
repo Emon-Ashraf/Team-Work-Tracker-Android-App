@@ -1,34 +1,46 @@
 package com.example.teamworktracker.ui_screens.tasks
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddFileAttachmentScreen(
     taskId: Int,
     onAttachmentAdded: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    viewModel: AddAttachmentViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+    val uiState by viewModel.state.collectAsState()
+
     var description by remember { mutableStateOf("") }
-    var selectedFileName by remember { mutableStateOf<String?>(null) }
-    var error by remember { mutableStateOf<String?>(null) }
+    var pickedUri by remember { mutableStateOf<Uri?>(null) }
+    var localError by remember { mutableStateOf<String?>(null) }
+
+    val picker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        pickedUri = uri
+    }
+
+    LaunchedEffect(uiState.done) {
+        if (uiState.done) onAttachmentAdded()
+    }
 
     Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Add File Attachment") }
-            )
-        }
+        topBar = { CenterAlignedTopAppBar(title = { Text("Add File Attachment") }) }
     ) { padding ->
         Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .padding(16.dp),
+            modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
@@ -41,47 +53,45 @@ fun AddFileAttachmentScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // ⚠️ For now we just show a stub. No real file picker yet (API/UI only).
             OutlinedButton(
-                onClick = {
-                    // Later: launch file picker and update selectedFileName
-                    selectedFileName = "example_document.pdf"
-                },
+                onClick = { picker.launch(arrayOf("*/*")) },
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Choose File (stub)")
+                Text("Choose File")
             }
 
             Text(
-                text = "Selected: ${selectedFileName ?: "No file selected"}",
+                text = if (pickedUri != null) "Selected: $pickedUri" else "No file selected",
                 style = MaterialTheme.typography.bodySmall
             )
 
-            if (error != null) {
-                Text(
-                    text = error!!,
-                    color = MaterialTheme.colorScheme.error
-                )
+            val shownError = localError ?: uiState.error
+            if (shownError != null) {
+                Text(shownError, color = MaterialTheme.colorScheme.error)
             }
 
             Button(
                 onClick = {
-                    if (selectedFileName == null) {
-                        error = "Please select a file (stub)"
-                    } else {
-                        error = null
-                        // Later: POST multipart /tasks/{task_id}/attachments/file
-                        onAttachmentAdded()
+                    val uri = pickedUri
+                    if (uri == null) {
+                        localError = "Please select a file"
+                        return@Button
                     }
+                    localError = null
+                    viewModel.uploadFile(
+                        context = context,
+                        taskId = taskId,
+                        uri = uri,
+                        description = description.trim()
+                    )
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !uiState.isLoading
             ) {
-                Text("Upload File")
+                Text(if (uiState.isLoading) "Uploading..." else "Upload File")
             }
 
-            TextButton(onClick = onBack) {
-                Text("Cancel")
-            }
+            TextButton(onClick = onBack) { Text("Cancel") }
         }
     }
 }

@@ -5,72 +5,62 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddCommentScreen(
     taskId: Int,
     onCommentAdded: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    viewModel: AddCommentViewModel = viewModel()
 ) {
+    val uiState by viewModel.state.collectAsState()
     var content by remember { mutableStateOf("") }
-    var error by remember { mutableStateOf<String?>(null) }
+    var localError by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(uiState.done) {
+        if (uiState.done) onCommentAdded()
+    }
 
     Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = { Text("Add Comment") }
-            )
-        }
+        topBar = { CenterAlignedTopAppBar(title = { Text("Add Comment") }) }
     ) { padding ->
         Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .padding(16.dp),
+            modifier = Modifier.padding(padding).fillMaxSize().padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-
-            Text(
-                text = "Task ID: $taskId",
-                style = MaterialTheme.typography.bodySmall
-            )
+            Text("Task ID: $taskId", style = MaterialTheme.typography.bodySmall)
 
             OutlinedTextField(
                 value = content,
                 onValueChange = { content = it },
                 label = { Text("Comment") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 120.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
                 maxLines = 5
             )
 
-            if (error != null) {
-                Text(
-                    text = error!!,
-                    color = MaterialTheme.colorScheme.error
-                )
+            val shownError = localError ?: uiState.error
+            if (shownError != null) {
+                Text(shownError, color = MaterialTheme.colorScheme.error)
             }
 
             Button(
                 onClick = {
                     if (content.isBlank()) {
-                        error = "Comment cannot be empty"
-                    } else {
-                        error = null
-                        // Later: POST /api/v1/tasks/{task_id}/comments with { content }
-                        onCommentAdded()
+                        localError = "Comment cannot be empty"
+                        return@Button
                     }
+                    localError = null
+                    viewModel.submit(taskId, content.trim())
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !uiState.isLoading
             ) {
-                Text("Add Comment")
+                Text(if (uiState.isLoading) "Adding..." else "Add Comment")
             }
 
-            TextButton(onClick = onBack) {
-                Text("Cancel")
-            }
+            TextButton(onClick = onBack) { Text("Cancel") }
         }
     }
 }

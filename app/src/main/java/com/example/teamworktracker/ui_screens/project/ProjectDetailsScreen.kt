@@ -7,8 +7,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.teamworktracker.data.FakeProjectRepository
-import com.example.teamworktracker.data.FakeTaskRepository
+import com.example.teamworktracker.data.testRepo.TestProjectRepository
+import com.example.teamworktracker.data.testRepo.TestTaskRepository
 import com.example.teamworktracker.domain.models.Task
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -18,8 +18,8 @@ fun ProjectDetailsScreen(
     onBack: () -> Unit,
     onTaskClick: (Int) -> Unit
 ) {
-    val project = FakeProjectRepository.getMyProjects().find { it.id == projectId }
-    val allTasks = FakeTaskRepository.getMyTasks()
+    val project = TestProjectRepository.getMyProjects().find { it.id == projectId }
+    val allTasks = TestTaskRepository.getMyTasks()
     val projectTasks: List<Task> = allTasks.filter { it.projectId == projectId }
 
     Scaffold(
