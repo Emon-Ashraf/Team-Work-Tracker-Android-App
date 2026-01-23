@@ -30,6 +30,6 @@ fun TaskDto.toDomain(): Task {
 }
 
 // Domain enum -> API string
-// If your swagger shows enums are UPPERCASE, change `.lowercase()` to `.name`
+// If swagger shows enums are UPPERCASE, change `.lowercase()` to `.name`
 fun TaskPriority.toApi(): String = name.lowercase()
 fun TaskStatus.toApi(): String = name.lowercase()

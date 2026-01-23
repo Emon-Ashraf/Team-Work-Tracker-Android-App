@@ -60,7 +60,7 @@ class RemoteTaskRepository(
         api.deleteTask(taskId)
     }
 
-    // ✅ COMMENTS
+    // COMMENTS
     override suspend fun getTaskComments(taskId: Int): List<TaskComment> {
         return api.getComments(taskId).map { it.toDomain() }
     }
@@ -69,7 +69,7 @@ class RemoteTaskRepository(
         return api.addComment(taskId, TaskCommentCreateRequest(content)).toDomain()
     }
 
-    // ✅ ATTACHMENTS
+    // ATTACHMENTS
     override suspend fun getTaskAttachments(taskId: Int): List<TaskAttachment> {
         return api.getAttachments(taskId).map { it.toDomain() }
     }

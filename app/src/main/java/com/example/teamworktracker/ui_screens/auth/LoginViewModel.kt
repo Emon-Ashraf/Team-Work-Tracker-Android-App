@@ -47,7 +47,7 @@ class LoginViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    // Keep the old login method for backward compatibility if needed, or remove if not used elsewhere
+    // Keeping the old login method for backward compatibility if needed, or remove if not used elsewhere
     fun login(emailOrUsername: String, password: String) {
         viewModelScope.launch {
             _state.value = LoginUiState(loading = true)
