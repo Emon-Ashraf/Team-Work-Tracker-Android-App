@@ -14,10 +14,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.teamworktracker.domain.models.TaskAttachment
 import com.example.teamworktracker.domain.models.TaskPriority
 import com.example.teamworktracker.domain.models.TaskStatus
 import com.example.teamworktracker.ui.theme.AppColors
@@ -36,8 +40,21 @@ fun TaskDetailsScreen(
     val uiState by viewModel.state.collectAsState()
     var showDeleteDialog by remember { mutableStateOf(false) }
 
+    // Load everything (task + comments + attachments)
     LaunchedEffect(taskId) {
-        viewModel.loadTask(taskId)
+        viewModel.loadAll(taskId)
+    }
+
+    // ✅ IMPORTANT: refresh when coming back from AddComment screen
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner, taskId) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.loadAll(taskId)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
     LaunchedEffect(uiState.deleted) {
@@ -74,19 +91,11 @@ fun TaskDetailsScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { viewModel.loadTask(taskId) }) {
-                        Icon(
-                            Icons.Default.Refresh,
-                            contentDescription = "Refresh",
-                            tint = Color.White
-                        )
+                    IconButton(onClick = { viewModel.loadAll(taskId) }) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = Color.White)
                     }
                     IconButton(onClick = { showDeleteDialog = true }) {
-                        Icon(
-                            Icons.Default.Delete,
-                            contentDescription = "Delete task",
-                            tint = Color(0xFFFF6B6B)
-                        )
+                        Icon(Icons.Default.Delete, contentDescription = "Delete task", tint = Color(0xFFFF6B6B))
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -108,10 +117,7 @@ fun TaskDetailsScreen(
 
         when {
             uiState.isLoading -> {
-                Box(
-                    modifier = bg,
-                    contentAlignment = Alignment.Center
-                ) {
+                Box(modifier = bg, contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(color = AppColors.PrimaryBlue)
                 }
             }
@@ -133,7 +139,7 @@ fun TaskDetailsScreen(
                     }
 
                     Button(
-                        onClick = { viewModel.loadTask(taskId) },
+                        onClick = { viewModel.loadAll(taskId) },
                         colors = ButtonDefaults.buttonColors(containerColor = AppColors.PrimaryBlue),
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -148,11 +154,7 @@ fun TaskDetailsScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text("Task not found", style = MaterialTheme.typography.titleMedium, color = Color.White)
-
-                    OutlinedButton(
-                        onClick = onBack,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
+                    OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
                         Text("Back", color = AppColors.MutedText)
                     }
                 }
@@ -186,13 +188,11 @@ fun TaskDetailsScreen(
                                 overflow = TextOverflow.Ellipsis
                             )
 
-                            // Status + Priority pills
                             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                                 StatusPill(task.status)
                                 PriorityPill(task.priority)
                             }
 
-                            // Description
                             Text(
                                 text = task.description,
                                 color = AppColors.MutedText,
@@ -201,7 +201,6 @@ fun TaskDetailsScreen(
 
                             HorizontalDivider(color = Color.White.copy(alpha = 0.08f))
 
-                            // Info rows
                             InfoRow(label = "Project ID", value = task.projectId.toString())
                             InfoRow(label = "Assigned to (user id)", value = task.assignedTo?.toString() ?: "-")
                             InfoRow(label = "Due date", value = task.dueDate)
@@ -214,12 +213,9 @@ fun TaskDetailsScreen(
                         }
                     }
 
-                    // ===== Primary action =====
                     Button(
                         onClick = { onEditTask(task.id) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
+                        modifier = Modifier.fillMaxWidth().height(52.dp),
                         shape = RoundedCornerShape(16.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = AppColors.PrimaryBlue)
                     ) {
@@ -227,10 +223,7 @@ fun TaskDetailsScreen(
                     }
 
                     // ===== Comments =====
-                    SectionHeader(
-                        title = "Comments",
-                        rightHint = null
-                    )
+                    SectionHeader(title = "Comments", rightHint = "${uiState.comments.size}")
 
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -241,17 +234,33 @@ fun TaskDetailsScreen(
                             modifier = Modifier.padding(14.dp),
                             verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Text(
-                                text = "To add comment press the Add Comment button.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = AppColors.MutedText
-                            )
+                            if (uiState.comments.isEmpty()) {
+                                Text(
+                                    text = "No comments yet.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = AppColors.MutedText
+                                )
+                            } else {
+                                uiState.comments.forEach { c ->
+                                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                        Text(
+                                            text = "User #${c.userId} • ${c.createdAt.take(10)}",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = AppColors.MutedText
+                                        )
+                                        Text(
+                                            text = c.content,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = Color.White
+                                        )
+                                        HorizontalDivider(color = Color.White.copy(alpha = 0.06f))
+                                    }
+                                }
+                            }
 
                             Button(
                                 onClick = { onAddComment(task.id) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(48.dp),
+                                modifier = Modifier.fillMaxWidth().height(48.dp),
                                 shape = RoundedCornerShape(14.dp),
                                 colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.10f))
                             ) {
@@ -261,7 +270,7 @@ fun TaskDetailsScreen(
                     }
 
                     // ===== Attachments =====
-                    SectionHeader(title = "Attachments", rightHint = null)
+                    SectionHeader(title = "Attachments", rightHint = "${uiState.attachments.size}")
 
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -272,11 +281,18 @@ fun TaskDetailsScreen(
                             modifier = Modifier.padding(14.dp),
                             verticalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Text(
-                                text = "To attach file press the Add File button.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = AppColors.MutedText
-                            )
+                            if (uiState.attachments.isEmpty()) {
+                                Text(
+                                    text = "No attachments yet.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = AppColors.MutedText
+                                )
+                            } else {
+                                uiState.attachments.forEach { a ->
+                                    AttachmentRow(a)
+                                    HorizontalDivider(color = Color.White.copy(alpha = 0.06f))
+                                }
+                            }
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -284,9 +300,7 @@ fun TaskDetailsScreen(
                             ) {
                                 Button(
                                     onClick = { onAddAttachmentFile(task.id) },
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(48.dp),
+                                    modifier = Modifier.weight(1f).height(48.dp),
                                     shape = RoundedCornerShape(14.dp),
                                     colors = ButtonDefaults.buttonColors(containerColor = AppColors.PrimaryBlue)
                                 ) {
@@ -295,13 +309,9 @@ fun TaskDetailsScreen(
 
                                 OutlinedButton(
                                     onClick = { onAddAttachmentLink(task.id) },
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .height(48.dp),
+                                    modifier = Modifier.weight(1f).height(48.dp),
                                     shape = RoundedCornerShape(14.dp),
-                                    colors = ButtonDefaults.outlinedButtonColors(
-                                        contentColor = Color.White
-                                    )
+                                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
                                 ) {
                                     Text("Add Link")
                                 }
@@ -309,11 +319,7 @@ fun TaskDetailsScreen(
                         }
                     }
 
-                    // ===== Back =====
-                    TextButton(
-                        onClick = onBack,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
+                    TextButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
                         Text("Back", color = AppColors.MutedText)
                     }
 
@@ -321,6 +327,49 @@ fun TaskDetailsScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun AttachmentRow(a: TaskAttachment) {
+    val title = a.description?.takeIf { it.isNotBlank() }
+        ?: a.originalName
+        ?: a.filename
+        ?: a.fileUrl
+        ?: "(attachment)"
+
+    Text(
+        text = title,
+        color = Color.White,
+        style = MaterialTheme.typography.bodyMedium,
+        maxLines = 2,
+        overflow = TextOverflow.Ellipsis
+    )
+
+    val meta = buildString {
+        append("User #${a.userId}")
+        append(" • ")
+        append(a.uploadedAt.take(10))
+        if (!a.fileType.isNullOrBlank()) {
+            append(" • ")
+            append(a.fileType)
+        }
+    }
+
+    Text(
+        text = meta,
+        color = AppColors.MutedText,
+        style = MaterialTheme.typography.labelSmall
+    )
+
+    if (!a.fileUrl.isNullOrBlank()) {
+        Text(
+            text = a.fileUrl,
+            color = AppColors.MutedText,
+            style = MaterialTheme.typography.bodySmall,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
     }
 }
 
