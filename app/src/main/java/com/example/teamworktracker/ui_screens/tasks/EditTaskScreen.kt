@@ -1,5 +1,6 @@
 package com.example.teamworktracker.ui_screens.tasks
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -13,9 +14,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.teamworktracker.ui.theme.AppColors
+import com.example.teamworktracker.ui.theme.TeamWorkTrackerTheme
+import com.example.teamworktracker.ui_screens.preview.PreviewData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,6 +39,56 @@ fun EditTaskScreen(
         if (uiState.saved) onTaskUpdated()
     }
 
+    val task = uiState.task
+    val formState = if (!uiState.isLoading && uiState.error == null && task != null) {
+        remember(task.id) {
+            mutableStateOf(
+                EditTaskFormState(
+                    title = task.title,
+                    description = task.description,
+                    assignedToText = task.assignedTo.toString(),
+                    selectedPriority = task.priority.name.lowercase(),
+                    selectedStatus = task.status.name.lowercase(),
+                    dueDateText = task.dueDate
+                )
+            )
+        }
+    } else {
+        null
+    }
+
+    EditTaskScreenContent(
+        uiState = uiState,
+        form = formState?.value ?: EditTaskFormState(),
+        onFormChange = { formState?.value = it },
+        onRetry = { viewModel.load(taskId) },
+        onSave = { viewModel.save(taskId, it) },
+        onBack = onBack
+    )
+}
+
+data class EditTaskFormState(
+    val title: String = "",
+    val description: String = "",
+    val assignedToText: String = "",
+    val selectedPriority: String = "",
+    val selectedStatus: String = "",
+    val dueDateText: String = "",
+    val priorityExpanded: Boolean = false,
+    val statusExpanded: Boolean = false,
+    val localError: String? = null
+)
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EditTaskScreenContent(
+    uiState: EditTaskUiState,
+    form: EditTaskFormState,
+    onFormChange: (EditTaskFormState) -> Unit,
+    onRetry: () -> Unit,
+    onSave: (Map<String, Any?>) -> Unit,
+    onBack: () -> Unit
+) {
     Scaffold(
         containerColor = AppColors.BgDark,
         topBar = {
@@ -81,7 +135,7 @@ fun EditTaskScreen(
                     }
 
                     Button(
-                        onClick = { viewModel.load(taskId) },
+                        onClick = onRetry,
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(containerColor = AppColors.PrimaryBlue)
                     ) { Text("Retry") }
@@ -105,21 +159,17 @@ fun EditTaskScreen(
             }
 
             else -> {
-                val task = uiState.task!!
-
-                var title by remember(task.id) { mutableStateOf(task.title) }
-                var description by remember(task.id) { mutableStateOf(task.description) }
-                var assignedToText by remember(task.id) { mutableStateOf(task.assignedTo.toString()) }
-                var selectedPriority by remember(task.id) { mutableStateOf(task.priority.name.lowercase()) }
-                var selectedStatus by remember(task.id) { mutableStateOf(task.status.name.lowercase()) }
-                var dueDateText by remember(task.id) { mutableStateOf(task.dueDate) }
-
+                val title = form.title
+                val description = form.description
+                val assignedToText = form.assignedToText
+                val selectedPriority = form.selectedPriority
+                val selectedStatus = form.selectedStatus
+                val dueDateText = form.dueDateText
+                val priorityExpanded = form.priorityExpanded
+                val statusExpanded = form.statusExpanded
+                val localError = form.localError
                 val priorityOptions = listOf("low", "medium", "high")
                 val statusOptions = listOf("new", "in_progress", "completed", "blocked")
-
-                var priorityExpanded by remember { mutableStateOf(false) }
-                var statusExpanded by remember { mutableStateOf(false) }
-                var localError by remember { mutableStateOf<String?>(null) }
 
                 Column(
                     modifier = bg.padding(16.dp),
@@ -146,7 +196,7 @@ fun EditTaskScreen(
                             ) {
                                 OutlinedTextField(
                                     value = title,
-                                    onValueChange = { title = it },
+                                    onValueChange = { onFormChange(form.copy(title = it)) },
                                     label = { Text("Title") },
                                     modifier = Modifier.fillMaxWidth(),
                                     enabled = !uiState.isSaving,
@@ -156,7 +206,7 @@ fun EditTaskScreen(
 
                                 OutlinedTextField(
                                     value = description,
-                                    onValueChange = { description = it },
+                                    onValueChange = { onFormChange(form.copy(description = it)) },
                                     label = { Text("Description") },
                                     modifier = Modifier.fillMaxWidth(),
                                     enabled = !uiState.isSaving,
@@ -167,7 +217,7 @@ fun EditTaskScreen(
 
                                 OutlinedTextField(
                                     value = assignedToText,
-                                    onValueChange = { assignedToText = it },
+                                    onValueChange = { onFormChange(form.copy(assignedToText = it)) },
                                     label = { Text("Assigned To (user id)") },
                                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                     modifier = Modifier.fillMaxWidth(),
@@ -178,7 +228,7 @@ fun EditTaskScreen(
 
                                 ExposedDropdownMenuBox(
                                     expanded = priorityExpanded,
-                                    onExpandedChange = { if (!uiState.isSaving) priorityExpanded = !priorityExpanded }
+                                    onExpandedChange = { if (!uiState.isSaving) onFormChange(form.copy(priorityExpanded = !priorityExpanded)) }
                                 ) {
                                     OutlinedTextField(
                                         value = selectedPriority,
@@ -192,14 +242,13 @@ fun EditTaskScreen(
                                     )
                                     ExposedDropdownMenu(
                                         expanded = priorityExpanded,
-                                        onDismissRequest = { priorityExpanded = false }
+                                        onDismissRequest = { onFormChange(form.copy(priorityExpanded = false)) }
                                     ) {
                                         priorityOptions.forEach { option ->
                                             DropdownMenuItem(
                                                 text = { Text(option) },
                                                 onClick = {
-                                                    selectedPriority = option
-                                                    priorityExpanded = false
+                                                    onFormChange(form.copy(selectedPriority = option, priorityExpanded = false))
                                                 }
                                             )
                                         }
@@ -208,7 +257,7 @@ fun EditTaskScreen(
 
                                 ExposedDropdownMenuBox(
                                     expanded = statusExpanded,
-                                    onExpandedChange = { if (!uiState.isSaving) statusExpanded = !statusExpanded }
+                                    onExpandedChange = { if (!uiState.isSaving) onFormChange(form.copy(statusExpanded = !statusExpanded)) }
                                 ) {
                                     OutlinedTextField(
                                         value = selectedStatus,
@@ -222,14 +271,13 @@ fun EditTaskScreen(
                                     )
                                     ExposedDropdownMenu(
                                         expanded = statusExpanded,
-                                        onDismissRequest = { statusExpanded = false }
+                                        onDismissRequest = { onFormChange(form.copy(statusExpanded = false)) }
                                     ) {
                                         statusOptions.forEach { option ->
                                             DropdownMenuItem(
                                                 text = { Text(option) },
                                                 onClick = {
-                                                    selectedStatus = option
-                                                    statusExpanded = false
+                                                    onFormChange(form.copy(selectedStatus = option, statusExpanded = false))
                                                 }
                                             )
                                         }
@@ -238,7 +286,7 @@ fun EditTaskScreen(
 
                                 OutlinedTextField(
                                     value = dueDateText,
-                                    onValueChange = { dueDateText = it },
+                                    onValueChange = { onFormChange(form.copy(dueDateText = it)) },
                                     label = { Text("Due date (ISO)") },
                                     modifier = Modifier.fillMaxWidth(),
                                     enabled = !uiState.isSaving,
@@ -285,19 +333,18 @@ fun EditTaskScreen(
                                 val assignedTo = assignedToText.toIntOrNull()
                                 when {
                                     title.isBlank() -> {
-                                        localError = "Title is required"
+                                        onFormChange(form.copy(localError = "Title is required"))
                                         return@Button
                                     }
                                     assignedTo == null -> {
-                                        localError = "Valid assignee ID is required"
+                                        onFormChange(form.copy(localError = "Valid assignee ID is required"))
                                         return@Button
                                     }
-                                    else -> localError = null
+                                    else -> onFormChange(form.copy(localError = null))
                                 }
 
-                                viewModel.save(
-                                    taskId = taskId,
-                                    body = mapOf(
+                                onSave(
+                                    mapOf(
                                         "title" to title.trim(),
                                         "description" to description.trim(),
                                         "assigned_to" to assignedTo,
@@ -338,3 +385,26 @@ private fun fieldColors() = OutlinedTextFieldDefaults.colors(
     disabledTextColor = Color.White.copy(alpha = 0.7f),
     cursorColor = AppColors.PrimaryBlue
 )
+
+@Preview(name = "Light", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(name = "Dark", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun EditTaskScreenPreview() {
+    TeamWorkTrackerTheme(dynamicColor = false) {
+        EditTaskScreenContent(
+            uiState = EditTaskUiState(task = PreviewData.task),
+            form = EditTaskFormState(
+                title = PreviewData.task.title,
+                description = PreviewData.task.description,
+                assignedToText = PreviewData.task.assignedTo.toString(),
+                selectedPriority = "high",
+                selectedStatus = "in_progress",
+                dueDateText = PreviewData.task.dueDate
+            ),
+            onFormChange = {},
+            onRetry = {},
+            onSave = {},
+            onBack = {}
+        )
+    }
+}

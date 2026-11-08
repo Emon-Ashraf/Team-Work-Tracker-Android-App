@@ -1,5 +1,6 @@
 package com.example.teamworktracker.ui_screens.project
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -10,9 +11,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.teamworktracker.ui.theme.AppColors
+import com.example.teamworktracker.ui.theme.TeamWorkTrackerTheme
+import com.example.teamworktracker.ui_screens.preview.PreviewData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,6 +32,32 @@ fun CreateProjectScreen(
 
     val uiState by viewModel.state.collectAsState()
 
+    CreateProjectScreenContent(
+        uiState = uiState,
+        name = name,
+        onNameChange = { name = it },
+        description = description,
+        onDescriptionChange = { description = it },
+        error = error,
+        onErrorChange = { error = it },
+        onCreateProject = { name, description -> viewModel.createProject(teamId, name, description, onProjectCreated) },
+        onBack = onBack
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CreateProjectScreenContent(
+    uiState: ProjectsUiState,
+    name: String,
+    onNameChange: (String) -> Unit,
+    description: String,
+    onDescriptionChange: (String) -> Unit,
+    error: String?,
+    onErrorChange: (String?) -> Unit,
+    onCreateProject: (String, String) -> Unit,
+    onBack: () -> Unit
+) {
     Scaffold(
         containerColor = AppColors.BgDark,
         topBar = {
@@ -57,7 +87,7 @@ fun CreateProjectScreen(
                 Text("Project Name", color = Color.White, style = MaterialTheme.typography.labelLarge)
                 OutlinedTextField(
                     value = name,
-                    onValueChange = { name = it },
+                    onValueChange = onNameChange,
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     enabled = !uiState.isLoading,
@@ -70,7 +100,7 @@ fun CreateProjectScreen(
                 Text("Description", color = Color.White, style = MaterialTheme.typography.labelLarge)
                 OutlinedTextField(
                     value = description,
-                    onValueChange = { description = it },
+                    onValueChange = onDescriptionChange,
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !uiState.isLoading,
                     minLines = 4,
@@ -99,15 +129,10 @@ fun CreateProjectScreen(
                 Button(
                     onClick = {
                         if (name.isBlank()) {
-                            error = "Project name is required"
+                            onErrorChange("Project name is required")
                         } else {
-                            error = null
-                            viewModel.createProject(
-                                teamId = teamId,
-                                name = name.trim(),
-                                description = description.trim(),
-                                onSuccess = onProjectCreated
-                            )
+                            onErrorChange(null)
+                            onCreateProject(name.trim(), description.trim())
                         }
                     },
                     modifier = Modifier
@@ -159,3 +184,22 @@ private fun fieldColors() = OutlinedTextFieldDefaults.colors(
 
     cursorColor = AppColors.PrimaryBlue
 )
+
+@Preview(name = "Light", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(name = "Dark", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun CreateProjectScreenPreview() {
+    TeamWorkTrackerTheme(dynamicColor = false) {
+        CreateProjectScreenContent(
+            uiState = ProjectsUiState(),
+            name = PreviewData.project.name,
+            onNameChange = {},
+            description = PreviewData.project.description,
+            onDescriptionChange = {},
+            error = null,
+            onErrorChange = {},
+            onCreateProject = { _, _ -> },
+            onBack = {}
+        )
+    }
+}

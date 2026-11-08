@@ -1,5 +1,6 @@
 package com.example.teamworktracker.ui_screens.team
 
+import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -13,10 +14,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.teamworktracker.R
 import com.example.teamworktracker.ui.theme.AppColors
+import com.example.teamworktracker.ui.theme.TeamWorkTrackerTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,6 +33,28 @@ fun JoinTeamScreen(
 
     val uiState by teamsViewModel.state.collectAsState()
 
+    JoinTeamScreenContent(
+        uiState = uiState,
+        teamIdText = teamIdText,
+        onTeamIdTextChange = { teamIdText = it },
+        error = error,
+        onErrorChange = { error = it },
+        onJoinTeam = { teamsViewModel.joinTeam(it, onJoined) },
+        onBack = onBack
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun JoinTeamScreenContent(
+    uiState: TeamsUiState,
+    teamIdText: String,
+    onTeamIdTextChange: (String) -> Unit,
+    error: String?,
+    onErrorChange: (String?) -> Unit,
+    onJoinTeam: (Int) -> Unit,
+    onBack: () -> Unit
+) {
     Scaffold(
         containerColor = AppColors.BgDark,
         topBar = {
@@ -87,7 +112,7 @@ fun JoinTeamScreen(
 
                 OutlinedTextField(
                     value = teamIdText,
-                    onValueChange = { teamIdText = it },
+                    onValueChange = onTeamIdTextChange,
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     enabled = !uiState.isLoading,
@@ -118,13 +143,10 @@ fun JoinTeamScreen(
                     onClick = {
                         val id = teamIdText.toIntOrNull()
                         if (id == null) {
-                            error = "Enter a valid numeric team ID"
+                            onErrorChange("Enter a valid numeric team ID")
                         } else {
-                            error = null
-                            teamsViewModel.joinTeam(
-                                teamId = id,
-                                onSuccess = onJoined
-                            )
+                            onErrorChange(null)
+                            onJoinTeam(id)
                         }
                     },
                     modifier = Modifier
@@ -157,5 +179,22 @@ fun JoinTeamScreen(
                 }
             }
         }
+    }
+}
+
+@Preview(name = "Light", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(name = "Dark", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun JoinTeamScreenPreview() {
+    TeamWorkTrackerTheme(dynamicColor = false) {
+        JoinTeamScreenContent(
+            uiState = TeamsUiState(),
+            teamIdText = "1",
+            onTeamIdTextChange = {},
+            error = null,
+            onErrorChange = {},
+            onJoinTeam = {},
+            onBack = {}
+        )
     }
 }

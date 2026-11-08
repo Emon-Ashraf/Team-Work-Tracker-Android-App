@@ -1,5 +1,6 @@
 package com.example.teamworktracker.ui_screens.tasks
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -14,17 +15,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.teamworktracker.domain.models.TaskAttachment
 import com.example.teamworktracker.domain.models.TaskPriority
 import com.example.teamworktracker.domain.models.TaskStatus
 import com.example.teamworktracker.ui.theme.AppColors
+import com.example.teamworktracker.ui.theme.TeamWorkTrackerTheme
+import com.example.teamworktracker.ui_screens.preview.PreviewData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,21 +65,49 @@ fun TaskDetailsScreen(
         if (uiState.deleted) onBack()
     }
 
+    TaskDetailsScreenContent(
+        uiState = uiState,
+        showDeleteDialog = showDeleteDialog,
+        onDeleteDialogChange = { showDeleteDialog = it },
+        onDeleteTask = { viewModel.deleteTask(taskId) },
+        onRefresh = { viewModel.loadAll(taskId) },
+        onBack = onBack,
+        onEditTask = onEditTask,
+        onAddComment = onAddComment,
+        onAddAttachmentLink = onAddAttachmentLink,
+        onAddAttachmentFile = onAddAttachmentFile
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TaskDetailsScreenContent(
+    uiState: TaskDetailsUiState,
+    showDeleteDialog: Boolean,
+    onDeleteDialogChange: (Boolean) -> Unit,
+    onDeleteTask: () -> Unit,
+    onRefresh: () -> Unit,
+    onBack: () -> Unit,
+    onEditTask: (Int) -> Unit,
+    onAddComment: (Int) -> Unit,
+    onAddAttachmentLink: (Int) -> Unit,
+    onAddAttachmentFile: (Int) -> Unit
+) {
     if (showDeleteDialog) {
         AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
+            onDismissRequest = { onDeleteDialogChange(false) },
             title = { Text("Delete task?") },
             text = { Text("This action cannot be undone.") },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        showDeleteDialog = false
-                        viewModel.deleteTask(taskId)
+                        onDeleteDialogChange(false)
+                        onDeleteTask()
                     }
                 ) { Text("Delete") }
             },
             dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) { Text("Cancel") }
+                TextButton(onClick = { onDeleteDialogChange(false) }) { Text("Cancel") }
             }
         )
     }
@@ -91,10 +123,10 @@ fun TaskDetailsScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { viewModel.loadAll(taskId) }) {
+                    IconButton(onClick = { onRefresh() }) {
                         Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = Color.White)
                     }
-                    IconButton(onClick = { showDeleteDialog = true }) {
+                    IconButton(onClick = { onDeleteDialogChange(true) }) {
                         Icon(Icons.Default.Delete, contentDescription = "Delete task", tint = Color(0xFFFF6B6B))
                     }
                 },
@@ -139,7 +171,7 @@ fun TaskDetailsScreen(
                     }
 
                     Button(
-                        onClick = { viewModel.loadAll(taskId) },
+                        onClick = { onRefresh() },
                         colors = ButtonDefaults.buttonColors(containerColor = AppColors.PrimaryBlue),
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -457,6 +489,30 @@ private fun PriorityPill(priority: TaskPriority) {
             style = MaterialTheme.typography.labelMedium,
             color = fg,
             fontWeight = FontWeight.SemiBold
+        )
+    }
+}
+
+@Preview(name = "Light", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(name = "Dark", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun TaskDetailsScreenPreview() {
+    TeamWorkTrackerTheme(dynamicColor = false) {
+        TaskDetailsScreenContent(
+            uiState = TaskDetailsUiState(
+                task = PreviewData.task,
+                comments = PreviewData.comments,
+                attachments = PreviewData.attachments
+            ),
+            showDeleteDialog = false,
+            onDeleteDialogChange = {},
+            onDeleteTask = {},
+            onRefresh = {},
+            onBack = {},
+            onEditTask = {},
+            onAddComment = {},
+            onAddAttachmentLink = {},
+            onAddAttachmentFile = {}
         )
     }
 }

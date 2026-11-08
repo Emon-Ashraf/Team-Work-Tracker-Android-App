@@ -1,5 +1,6 @@
 package com.example.teamworktracker.ui_screens.auth
 
+import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -268,14 +269,15 @@ fun fieldColors() = OutlinedTextFieldDefaults.colors(
     cursorColor = AppColors.PrimaryBlue
 )
 
-@Preview(showBackground = true)
+@Preview(name = "Light", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(name = "Dark", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun LoginScreenPreview() {
-    TeamWorkTrackerTheme {
+private fun LoginScreenPreview() {
+    TeamWorkTrackerTheme(dynamicColor = false) {
         LoginScreenContent(
-            email = "user@example.com",
+            email = "alex@example.com",
             onEmailChange = {},
-            password = "password123",
+            password = "preview-password",
             onPasswordChange = {},
             errorMessage = null,
             state = LoginUiState(),

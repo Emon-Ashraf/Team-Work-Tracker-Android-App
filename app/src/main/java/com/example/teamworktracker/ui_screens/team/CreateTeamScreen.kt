@@ -1,5 +1,6 @@
 package com.example.teamworktracker.ui_screens.team
 
+import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -13,10 +14,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.teamworktracker.R
 import com.example.teamworktracker.ui.theme.AppColors
+import com.example.teamworktracker.ui.theme.TeamWorkTrackerTheme
+import com.example.teamworktracker.ui_screens.preview.PreviewData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,6 +35,32 @@ fun CreateTeamScreen(
 
     val uiState by teamsViewModel.state.collectAsState()
 
+    CreateTeamScreenContent(
+        uiState = uiState,
+        name = name,
+        onNameChange = { name = it },
+        description = description,
+        onDescriptionChange = { description = it },
+        error = error,
+        onErrorChange = { error = it },
+        onCreateTeam = { name, description -> teamsViewModel.createTeam(name, description, onTeamCreated) },
+        onBack = onBack
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CreateTeamScreenContent(
+    uiState: TeamsUiState,
+    name: String,
+    onNameChange: (String) -> Unit,
+    description: String,
+    onDescriptionChange: (String) -> Unit,
+    error: String?,
+    onErrorChange: (String?) -> Unit,
+    onCreateTeam: (String, String) -> Unit,
+    onBack: () -> Unit
+) {
     Scaffold(
         containerColor = AppColors.BgDark,
         topBar = {
@@ -89,7 +119,7 @@ fun CreateTeamScreen(
                 Text("Team Name", color = Color.White, style = MaterialTheme.typography.labelLarge)
                 OutlinedTextField(
                     value = name,
-                    onValueChange = { name = it },
+                    onValueChange = onNameChange,
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = { Text("e.g. Marketing Squad", color = AppColors.MutedText) },
                     singleLine = true,
@@ -108,7 +138,7 @@ fun CreateTeamScreen(
                 Text("Description", color = Color.White, style = MaterialTheme.typography.labelLarge)
                 OutlinedTextField(
                     value = description,
-                    onValueChange = { description = it },
+                    onValueChange = onDescriptionChange,
                     modifier = Modifier.fillMaxWidth(),
                     placeholder = { Text("What is this team working on?", color = AppColors.MutedText) },
                     enabled = !uiState.isLoading,
@@ -140,14 +170,10 @@ fun CreateTeamScreen(
                 Button(
                     onClick = {
                         if (name.isBlank()) {
-                            error = "Name is required"
+                            onErrorChange("Name is required")
                         } else {
-                            error = null
-                            teamsViewModel.createTeam(
-                                name = name.trim(),
-                                description = description.trim(),
-                                onSuccess = onTeamCreated
-                            )
+                            onErrorChange(null)
+                            onCreateTeam(name.trim(), description.trim())
                         }
                     },
                     modifier = Modifier
@@ -199,3 +225,22 @@ fun fieldColors() = OutlinedTextFieldDefaults.colors(
 
     cursorColor = AppColors.PrimaryBlue
 )
+
+@Preview(name = "Light", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(name = "Dark", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun CreateTeamScreenPreview() {
+    TeamWorkTrackerTheme(dynamicColor = false) {
+        CreateTeamScreenContent(
+            uiState = TeamsUiState(),
+            name = PreviewData.team.name,
+            onNameChange = {},
+            description = PreviewData.team.description,
+            onDescriptionChange = {},
+            error = null,
+            onErrorChange = {},
+            onCreateTeam = { _, _ -> },
+            onBack = {}
+        )
+    }
+}

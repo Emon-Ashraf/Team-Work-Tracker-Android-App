@@ -1,5 +1,6 @@
 package com.example.teamworktracker.ui_screens.project
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -11,11 +12,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.teamworktracker.data.testRepo.TestProjectRepository
 import com.example.teamworktracker.data.testRepo.TestTaskRepository
+import com.example.teamworktracker.domain.models.Project
 import com.example.teamworktracker.domain.models.Task
 import com.example.teamworktracker.ui.theme.AppColors
+import com.example.teamworktracker.ui.theme.TeamWorkTrackerTheme
+import com.example.teamworktracker.ui_screens.preview.PreviewData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,6 +33,22 @@ fun ProjectDetailsScreen(
     val allTasks = TestTaskRepository.getMyTasks()
     val projectTasks: List<Task> = allTasks.filter { it.projectId == projectId }
 
+    ProjectDetailsScreenContent(
+        project = project,
+        projectTasks = projectTasks,
+        onBack = onBack,
+        onTaskClick = onTaskClick
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ProjectDetailsScreenContent(
+    project: Project?,
+    projectTasks: List<Task>,
+    onBack: () -> Unit,
+    onTaskClick: (Int) -> Unit
+) {
     Scaffold(
         containerColor = AppColors.BgDark,
         topBar = {
@@ -171,5 +192,19 @@ private fun InfoRow(label: String, value: String) {
         Text(label, color = AppColors.MutedText, style = MaterialTheme.typography.bodySmall)
         Spacer(modifier = Modifier.width(10.dp))
         Text(value, color = Color.White.copy(alpha = 0.9f), style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+@Preview(name = "Light", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(name = "Dark", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun ProjectDetailsScreenPreview() {
+    TeamWorkTrackerTheme(dynamicColor = false) {
+        ProjectDetailsScreenContent(
+            project = PreviewData.project,
+            projectTasks = PreviewData.tasks,
+            onBack = {},
+            onTaskClick = {}
+        )
     }
 }

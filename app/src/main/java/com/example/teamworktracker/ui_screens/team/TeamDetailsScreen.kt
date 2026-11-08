@@ -1,5 +1,6 @@
 package com.example.teamworktracker.ui_screens.team
 
+import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -16,10 +17,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.teamworktracker.R
 import com.example.teamworktracker.ui.theme.AppColors
+import com.example.teamworktracker.ui.theme.TeamWorkTrackerTheme
+import com.example.teamworktracker.ui_screens.preview.PreviewData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,6 +40,20 @@ fun TeamDetailsScreen(
         viewModel.load(teamId)
     }
 
+    TeamDetailsScreenContent(
+        uiState = uiState,
+        onBack = onBack,
+        onOpenProjects = onOpenProjects
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TeamDetailsScreenContent(
+    uiState: TeamDetailsUiState,
+    onBack: () -> Unit,
+    onOpenProjects: (Int) -> Unit
+) {
     Scaffold(
         containerColor = AppColors.BgDark,
         topBar = {
@@ -366,6 +384,19 @@ private fun InfoRow(label: String, value: String) {
             style = MaterialTheme.typography.bodySmall,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Preview(name = "Light", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(name = "Dark", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun TeamDetailsScreenPreview() {
+    TeamWorkTrackerTheme(dynamicColor = false) {
+        TeamDetailsScreenContent(
+            uiState = TeamDetailsUiState(team = PreviewData.team, members = PreviewData.members),
+            onBack = {},
+            onOpenProjects = {}
         )
     }
 }

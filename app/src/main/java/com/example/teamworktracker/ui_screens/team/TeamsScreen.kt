@@ -1,5 +1,6 @@
 package com.example.teamworktracker.ui_screens.team
 
+import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -15,10 +16,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.teamworktracker.R
 import com.example.teamworktracker.ui.theme.AppColors
+import com.example.teamworktracker.ui.theme.TeamWorkTrackerTheme
+import com.example.teamworktracker.ui_screens.preview.PreviewData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,6 +38,22 @@ fun TeamsScreen(
         viewModel.loadMyTeams()
     }
 
+    TeamsScreenContent(
+        uiState = uiState,
+        onCreateTeam = onCreateTeam,
+        onJoinTeam = onJoinTeam,
+        onTeamClick = onTeamClick
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TeamsScreenContent(
+    uiState: TeamsUiState,
+    onCreateTeam: () -> Unit,
+    onJoinTeam: () -> Unit,
+    onTeamClick: (Int) -> Unit
+) {
     Scaffold(
         containerColor = AppColors.BgDark,
         topBar = {
@@ -179,5 +199,19 @@ fun TeamsScreen(
                 }
             }
         }
+    }
+}
+
+@Preview(name = "Light", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(name = "Dark", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun TeamsScreenPreview() {
+    TeamWorkTrackerTheme(dynamicColor = false) {
+        TeamsScreenContent(
+            uiState = TeamsUiState(teams = PreviewData.teams),
+            onCreateTeam = {},
+            onJoinTeam = {},
+            onTeamClick = {}
+        )
     }
 }

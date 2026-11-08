@@ -1,5 +1,6 @@
 package com.example.teamworktracker.ui_screens.tasks
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -11,9 +12,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.teamworktracker.ui.theme.AppColors
+import com.example.teamworktracker.ui.theme.TeamWorkTrackerTheme
+import com.example.teamworktracker.ui_screens.preview.PreviewData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,6 +37,34 @@ fun AddLinkAttachmentScreen(
         if (uiState.done) onAttachmentAdded()
     }
 
+    AddLinkAttachmentScreenContent(
+        uiState = uiState,
+        description = description,
+        onDescriptionChange = { description = it },
+        url = url,
+        onUrlChange = { url = it },
+        localError = localError,
+        onLocalErrorChange = { localError = it },
+        taskId = taskId,
+        onAddLink = { url, description -> viewModel.addLink(taskId, url, description) },
+        onBack = onBack
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddLinkAttachmentScreenContent(
+    uiState: SimpleActionUiState,
+    description: String,
+    onDescriptionChange: (String) -> Unit,
+    url: String,
+    onUrlChange: (String) -> Unit,
+    localError: String?,
+    onLocalErrorChange: (String?) -> Unit,
+    taskId: Int,
+    onAddLink: (String, String) -> Unit,
+    onBack: () -> Unit
+) {
     Scaffold(
         containerColor = AppColors.BgDark,
         topBar = {
@@ -83,7 +115,7 @@ fun AddLinkAttachmentScreen(
 
                         OutlinedTextField(
                             value = description,
-                            onValueChange = { description = it },
+                            onValueChange = onDescriptionChange,
                             label = { Text("Description (optional)") },
                             modifier = Modifier.fillMaxWidth(),
                             enabled = !uiState.isLoading,
@@ -93,7 +125,7 @@ fun AddLinkAttachmentScreen(
 
                         OutlinedTextField(
                             value = url,
-                            onValueChange = { url = it },
+                            onValueChange = onUrlChange,
                             label = { Text("Link URL") },
                             modifier = Modifier.fillMaxWidth(),
                             enabled = !uiState.isLoading,
@@ -137,16 +169,12 @@ fun AddLinkAttachmentScreen(
                 Button(
                     onClick = {
                         if (url.isBlank()) {
-                            localError = "URL cannot be empty"
+                            onLocalErrorChange("URL cannot be empty")
                             return@Button
                         }
-                        localError = null
+                        onLocalErrorChange(null)
 
-                        viewModel.addLink(
-                            taskId = taskId,
-                            url = url.trim(),
-                            description = description.trim()
-                        )
+                        onAddLink(url.trim(), description.trim())
                     },
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                     enabled = !uiState.isLoading,
@@ -181,3 +209,23 @@ private fun fieldColors() = OutlinedTextFieldDefaults.colors(
     disabledTextColor = Color.White.copy(alpha = 0.7f),
     cursorColor = AppColors.PrimaryBlue
 )
+
+@Preview(name = "Light", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(name = "Dark", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun AddLinkAttachmentScreenPreview() {
+    TeamWorkTrackerTheme(dynamicColor = false) {
+        AddLinkAttachmentScreenContent(
+            uiState = SimpleActionUiState(),
+            description = "Dashboard design reference",
+            onDescriptionChange = {},
+            url = "https://example.com/designs/dashboard",
+            onUrlChange = {},
+            localError = null,
+            onLocalErrorChange = {},
+            taskId = PreviewData.task.id,
+            onAddLink = { _, _ -> },
+            onBack = {}
+        )
+    }
+}

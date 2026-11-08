@@ -1,5 +1,6 @@
 package com.example.teamworktracker.ui_screens.auth
 
+import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -22,10 +23,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.teamworktracker.R
 import com.example.teamworktracker.ui.theme.AppColors
+import com.example.teamworktracker.ui.theme.TeamWorkTrackerTheme
 
 @Composable
 fun RegisterScreen(
@@ -39,6 +42,35 @@ fun RegisterScreen(
     val password by viewModel.password
     val errorMessage by viewModel.errorMessage
 
+    RegisterScreenContent(
+        email = email,
+        onEmailChange = { viewModel.email.value = it },
+        username = username,
+        onUsernameChange = { viewModel.username.value = it },
+        fullName = fullName,
+        onFullNameChange = { viewModel.fullName.value = it },
+        password = password,
+        onPasswordChange = { viewModel.password.value = it },
+        errorMessage = errorMessage,
+        onRegister = { if (viewModel.register()) onRegisterSuccess() },
+        onBackToLogin = onBackToLogin
+    )
+}
+
+@Composable
+fun RegisterScreenContent(
+    email: String,
+    onEmailChange: (String) -> Unit,
+    username: String,
+    onUsernameChange: (String) -> Unit,
+    fullName: String,
+    onFullNameChange: (String) -> Unit,
+    password: String,
+    onPasswordChange: (String) -> Unit,
+    errorMessage: String?,
+    onRegister: () -> Unit,
+    onBackToLogin: () -> Unit
+) {
     var passwordVisible by remember { mutableStateOf(false) }
 
     Scaffold(containerColor = AppColors.BgDark) { padding ->
@@ -126,7 +158,7 @@ fun RegisterScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                         AppField(
                             value = email,
-                            onValueChange = { viewModel.email.value = it },
+                            onValueChange = onEmailChange,
                             placeholder = "name@company.com",
                             leading = { Icon(Icons.Filled.Email, null, tint = AppColors.MutedText) }
                         )
@@ -138,7 +170,7 @@ fun RegisterScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                         AppField(
                             value = username,
-                            onValueChange = { viewModel.username.value = it },
+                            onValueChange = onUsernameChange,
                             placeholder = "your_username",
                             leading = { Icon(Icons.Filled.Badge, null, tint = AppColors.MutedText) }
                         )
@@ -150,7 +182,7 @@ fun RegisterScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                         AppField(
                             value = fullName,
-                            onValueChange = { viewModel.fullName.value = it },
+                            onValueChange = onFullNameChange,
                             placeholder = "Your full name",
                             leading = { Icon(Icons.Filled.Person, null, tint = AppColors.MutedText) }
                         )
@@ -161,7 +193,7 @@ fun RegisterScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                         OutlinedTextField(
                             value = password,
-                            onValueChange = { viewModel.password.value = it },
+                            onValueChange = onPasswordChange,
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
                             placeholder = { Text("Create a password", color = AppColors.MutedText) },
@@ -193,10 +225,7 @@ fun RegisterScreen(
                         Spacer(modifier = Modifier.height(18.dp))
 
                         Button(
-                            onClick = {
-                                val success = viewModel.register()
-                                if (success) onRegisterSuccess()
-                            },
+                            onClick = onRegister,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(54.dp),
@@ -254,4 +283,25 @@ private fun AppField(
         colors = fieldColors(),
         shape = RoundedCornerShape(14.dp)
     )
+}
+
+@Preview(name = "Light", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(name = "Dark", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun RegisterScreenPreview() {
+    TeamWorkTrackerTheme(dynamicColor = false) {
+        RegisterScreenContent(
+            email = "alex@example.com",
+            onEmailChange = {},
+            username = "alexmorgan",
+            onUsernameChange = {},
+            fullName = "Alex Morgan",
+            onFullNameChange = {},
+            password = "preview-password",
+            onPasswordChange = {},
+            errorMessage = null,
+            onRegister = {},
+            onBackToLogin = {}
+        )
+    }
 }

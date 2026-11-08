@@ -1,5 +1,6 @@
 package com.example.teamworktracker.ui_screens.tasks
 
+import android.content.res.Configuration
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -16,10 +17,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.teamworktracker.ui.theme.AppColors
+import com.example.teamworktracker.ui.theme.TeamWorkTrackerTheme
 import com.example.teamworktracker.ui_screens.auth.fieldColors
+import com.example.teamworktracker.ui_screens.preview.PreviewData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,6 +50,34 @@ fun AddFileAttachmentScreen(
         if (uiState.done) onAttachmentAdded()
     }
 
+    AddFileAttachmentScreenContent(
+        uiState = uiState,
+        description = description,
+        onDescriptionChange = { description = it },
+        pickedUri = pickedUri,
+        localError = localError,
+        onLocalErrorChange = { localError = it },
+        taskId = taskId,
+        onChooseFile = { picker.launch(arrayOf("*/*")) },
+        onUpload = { uri, description -> viewModel.uploadFile(context, taskId, uri, description) },
+        onBack = onBack
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddFileAttachmentScreenContent(
+    uiState: SimpleActionUiState,
+    description: String,
+    onDescriptionChange: (String) -> Unit,
+    pickedUri: Uri?,
+    localError: String?,
+    onLocalErrorChange: (String?) -> Unit,
+    taskId: Int,
+    onChooseFile: () -> Unit,
+    onUpload: (Uri, String) -> Unit,
+    onBack: () -> Unit
+) {
     Scaffold(
         containerColor = AppColors.BgDark,
         topBar = {
@@ -96,7 +128,7 @@ fun AddFileAttachmentScreen(
 
                         OutlinedTextField(
                             value = description,
-                            onValueChange = { description = it },
+                            onValueChange = onDescriptionChange,
                             label = { Text("Description (optional)") },
                             modifier = Modifier.fillMaxWidth(),
                             enabled = !uiState.isLoading,
@@ -105,7 +137,7 @@ fun AddFileAttachmentScreen(
                         )
 
                         OutlinedButton(
-                            onClick = { picker.launch(arrayOf("*/*")) },
+                            onClick = { onChooseFile() },
                             modifier = Modifier.fillMaxWidth().height(48.dp),
                             enabled = !uiState.isLoading,
                             shape = RoundedCornerShape(14.dp),
@@ -175,16 +207,11 @@ fun AddFileAttachmentScreen(
                     onClick = {
                         val uri = pickedUri
                         if (uri == null) {
-                            localError = "Please select a file"
+                            onLocalErrorChange("Please select a file")
                             return@Button
                         }
-                        localError = null
-                        viewModel.uploadFile(
-                            context = context,
-                            taskId = taskId,
-                            uri = uri,
-                            description = description.trim()
-                        )
+                        onLocalErrorChange(null)
+                        onUpload(uri, description.trim())
                     },
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                     enabled = !uiState.isLoading,
@@ -203,5 +230,25 @@ fun AddFileAttachmentScreen(
                 }
             }
         }
+    }
+}
+
+@Preview(name = "Light", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(name = "Dark", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun AddFileAttachmentScreenPreview() {
+    TeamWorkTrackerTheme(dynamicColor = false) {
+        AddFileAttachmentScreenContent(
+            uiState = SimpleActionUiState(),
+            description = "Dashboard design specification",
+            onDescriptionChange = {},
+            pickedUri = Uri.parse("content://com.android.providers.downloads.documents/document/42"),
+            localError = null,
+            onLocalErrorChange = {},
+            taskId = PreviewData.task.id,
+            onChooseFile = {},
+            onUpload = { _, _ -> },
+            onBack = {}
+        )
     }
 }

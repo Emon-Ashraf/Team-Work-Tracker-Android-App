@@ -1,5 +1,6 @@
 package com.example.teamworktracker.ui_screens.tasks
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -11,9 +12,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.teamworktracker.ui.theme.AppColors
+import com.example.teamworktracker.ui.theme.TeamWorkTrackerTheme
+import com.example.teamworktracker.ui_screens.preview.PreviewData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,6 +35,30 @@ fun AddCommentScreen(
         if (uiState.done) onCommentAdded()
     }
 
+    AddCommentScreenContent(
+        uiState = uiState,
+        content = content,
+        onContentChange = { content = it },
+        localError = localError,
+        onLocalErrorChange = { localError = it },
+        taskId = taskId,
+        onSubmit = { viewModel.submit(taskId, it) },
+        onBack = onBack
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddCommentScreenContent(
+    uiState: SimpleActionUiState,
+    content: String,
+    onContentChange: (String) -> Unit,
+    localError: String?,
+    onLocalErrorChange: (String?) -> Unit,
+    taskId: Int,
+    onSubmit: (String) -> Unit,
+    onBack: () -> Unit
+) {
     Scaffold(
         containerColor = AppColors.BgDark,
         topBar = {
@@ -81,7 +109,7 @@ fun AddCommentScreen(
 
                         OutlinedTextField(
                             value = content,
-                            onValueChange = { content = it },
+                            onValueChange = onContentChange,
                             label = { Text("Comment") },
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -127,11 +155,11 @@ fun AddCommentScreen(
                 Button(
                     onClick = {
                         if (content.isBlank()) {
-                            localError = "Comment cannot be empty"
+                            onLocalErrorChange("Comment cannot be empty")
                             return@Button
                         }
-                        localError = null
-                        viewModel.submit(taskId, content.trim())
+                        onLocalErrorChange(null)
+                        onSubmit(content.trim())
                     },
                     modifier = Modifier.fillMaxWidth().height(52.dp),
                     enabled = !uiState.isLoading,
@@ -166,3 +194,21 @@ private fun fieldColors() = OutlinedTextFieldDefaults.colors(
     disabledTextColor = Color.White.copy(alpha = 0.7f),
     cursorColor = AppColors.PrimaryBlue
 )
+
+@Preview(name = "Light", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(name = "Dark", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun AddCommentScreenPreview() {
+    TeamWorkTrackerTheme(dynamicColor = false) {
+        AddCommentScreenContent(
+            uiState = SimpleActionUiState(),
+            content = "The dashboard is ready for review. Please share your feedback.",
+            onContentChange = {},
+            localError = null,
+            onLocalErrorChange = {},
+            taskId = PreviewData.task.id,
+            onSubmit = {},
+            onBack = {}
+        )
+    }
+}

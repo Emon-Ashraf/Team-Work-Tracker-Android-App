@@ -1,12 +1,13 @@
 package com.example.teamworktracker.ui_screens.home
 
+import android.content.res.Configuration
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,12 +22,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.teamworktracker.R
-import com.example.teamworktracker.data.testRepo.TestTaskRepository
 import com.example.teamworktracker.domain.models.Task
 import com.example.teamworktracker.domain.models.TaskPriority
 import com.example.teamworktracker.domain.models.TaskStatus
 import com.example.teamworktracker.ui.theme.AppColors
 import com.example.teamworktracker.ui.theme.TeamWorkTrackerTheme
+import com.example.teamworktracker.ui_screens.preview.PreviewData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,12 +38,15 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.state.collectAsState()
 
+    LaunchedEffect(Unit) {
+        viewModel.loadDashboard()
+    }
+
     HomeScreenContent(
         uiState = uiState,
         onOpenMyTasks = onOpenMyTasks,
         onOpenTeams = onOpenTeams,
-        onRefresh = { viewModel.loadDashboard() },
-        onLoadDashboard = { viewModel.loadDashboard() }
+        onRefresh = { viewModel.loadDashboard() }
     )
 }
 
@@ -52,13 +56,8 @@ fun HomeScreenContent(
     uiState: HomeUiState,
     onOpenMyTasks: () -> Unit,
     onOpenTeams: () -> Unit,
-    onRefresh: () -> Unit,
-    onLoadDashboard: () -> Unit
+    onRefresh: () -> Unit
 ) {
-    LaunchedEffect(Unit) {
-        onLoadDashboard()
-    }
-
     Scaffold(
         containerColor = AppColors.BgDark,
         topBar = {
@@ -361,18 +360,16 @@ private fun DashboardTileCard(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(name = "Light", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(name = "Dark", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun HomeScreenPreview() {
-    TeamWorkTrackerTheme {
+private fun HomeScreenPreview() {
+    TeamWorkTrackerTheme(dynamicColor = false) {
         HomeScreenContent(
-            uiState = HomeUiState(
-                tasks = TestTaskRepository.getMyTasks()
-            ),
+            uiState = HomeUiState(tasks = PreviewData.tasks),
             onOpenMyTasks = {},
             onOpenTeams = {},
-            onRefresh = {},
-            onLoadDashboard = {}
+            onRefresh = {}
         )
     }
 }

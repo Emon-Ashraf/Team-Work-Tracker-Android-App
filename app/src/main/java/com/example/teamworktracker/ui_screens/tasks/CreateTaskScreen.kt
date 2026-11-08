@@ -1,5 +1,6 @@
 package com.example.teamworktracker.ui_screens.tasks
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -12,9 +13,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.teamworktracker.ui.theme.AppColors
+import com.example.teamworktracker.ui.theme.TeamWorkTrackerTheme
+import com.example.teamworktracker.ui_screens.preview.PreviewData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,11 +32,9 @@ fun CreateTaskScreen(
     var projectIdText by remember { mutableStateOf("") }
     var assignedToText by remember { mutableStateOf("") }
 
-    val priorityOptions = listOf("low", "medium", "high")
     var selectedPriority by remember { mutableStateOf("medium") }
     var priorityExpanded by remember { mutableStateOf(false) }
 
-    val statusOptions = listOf("new", "in_progress", "completed", "blocked")
     var selectedStatus by remember { mutableStateOf("new") }
     var statusExpanded by remember { mutableStateOf(false) }
 
@@ -40,6 +42,65 @@ fun CreateTaskScreen(
     var localError by remember { mutableStateOf<String?>(null) }
 
     val uiState by viewModel.state.collectAsState()
+
+    CreateTaskScreenContent(
+        uiState = uiState,
+        title = title,
+        onTitleChange = { title = it },
+        description = description,
+        onDescriptionChange = { description = it },
+        projectIdText = projectIdText,
+        onProjectIdTextChange = { projectIdText = it },
+        assignedToText = assignedToText,
+        onAssignedToTextChange = { assignedToText = it },
+        selectedPriority = selectedPriority,
+        onSelectedPriorityChange = { selectedPriority = it },
+        priorityExpanded = priorityExpanded,
+        onPriorityExpandedChange = { priorityExpanded = it },
+        selectedStatus = selectedStatus,
+        onSelectedStatusChange = { selectedStatus = it },
+        statusExpanded = statusExpanded,
+        onStatusExpandedChange = { statusExpanded = it },
+        dueDateText = dueDateText,
+        onDueDateTextChange = { dueDateText = it },
+        localError = localError,
+        onLocalErrorChange = { localError = it },
+        onCreateTask = { projectId, assignedTo, title, description, priority, status, dueDate ->
+            viewModel.createTask(projectId, assignedTo, title, description, priority, status, dueDate, onTaskCreated)
+        },
+        onBack = onBack
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CreateTaskScreenContent(
+    uiState: MyTasksUiState,
+    title: String,
+    onTitleChange: (String) -> Unit,
+    description: String,
+    onDescriptionChange: (String) -> Unit,
+    projectIdText: String,
+    onProjectIdTextChange: (String) -> Unit,
+    assignedToText: String,
+    onAssignedToTextChange: (String) -> Unit,
+    selectedPriority: String,
+    onSelectedPriorityChange: (String) -> Unit,
+    priorityExpanded: Boolean,
+    onPriorityExpandedChange: (Boolean) -> Unit,
+    selectedStatus: String,
+    onSelectedStatusChange: (String) -> Unit,
+    statusExpanded: Boolean,
+    onStatusExpandedChange: (Boolean) -> Unit,
+    dueDateText: String,
+    onDueDateTextChange: (String) -> Unit,
+    localError: String?,
+    onLocalErrorChange: (String?) -> Unit,
+    onCreateTask: (Int, Int, String, String, String, String, String) -> Unit,
+    onBack: () -> Unit
+) {
+    val priorityOptions = listOf("low", "medium", "high")
+    val statusOptions = listOf("new", "in_progress", "completed", "blocked")
 
     Scaffold(
         containerColor = AppColors.BgDark,
@@ -80,7 +141,7 @@ fun CreateTaskScreen(
 
                 OutlinedTextField(
                     value = title,
-                    onValueChange = { title = it },
+                    onValueChange = onTitleChange,
                     label = { Text("Title") },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !uiState.isLoading,
@@ -90,7 +151,7 @@ fun CreateTaskScreen(
 
                 OutlinedTextField(
                     value = description,
-                    onValueChange = { description = it },
+                    onValueChange = onDescriptionChange,
                     label = { Text("Description") },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !uiState.isLoading,
@@ -103,7 +164,7 @@ fun CreateTaskScreen(
 
                 OutlinedTextField(
                     value = projectIdText,
-                    onValueChange = { projectIdText = it },
+                    onValueChange = onProjectIdTextChange,
                     label = { Text("Project ID") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
@@ -114,7 +175,7 @@ fun CreateTaskScreen(
 
                 OutlinedTextField(
                     value = assignedToText,
-                    onValueChange = { assignedToText = it },
+                    onValueChange = onAssignedToTextChange,
                     label = { Text("Assigned To (user id)") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
@@ -128,7 +189,7 @@ fun CreateTaskScreen(
                 // Priority dropdown (same logic)
                 ExposedDropdownMenuBox(
                     expanded = priorityExpanded,
-                    onExpandedChange = { if (!uiState.isLoading) priorityExpanded = !priorityExpanded }
+                    onExpandedChange = { if (!uiState.isLoading) onPriorityExpandedChange(!priorityExpanded) }
                 ) {
                     OutlinedTextField(
                         value = selectedPriority,
@@ -144,14 +205,14 @@ fun CreateTaskScreen(
                     )
                     ExposedDropdownMenu(
                         expanded = priorityExpanded,
-                        onDismissRequest = { priorityExpanded = false }
+                        onDismissRequest = { onPriorityExpandedChange(false) }
                     ) {
                         priorityOptions.forEach { option ->
                             DropdownMenuItem(
                                 text = { Text(option) },
                                 onClick = {
-                                    selectedPriority = option
-                                    priorityExpanded = false
+                                    onSelectedPriorityChange(option)
+                                    onPriorityExpandedChange(false)
                                 }
                             )
                         }
@@ -161,7 +222,7 @@ fun CreateTaskScreen(
                 // Status dropdown (same logic)
                 ExposedDropdownMenuBox(
                     expanded = statusExpanded,
-                    onExpandedChange = { if (!uiState.isLoading) statusExpanded = !statusExpanded }
+                    onExpandedChange = { if (!uiState.isLoading) onStatusExpandedChange(!statusExpanded) }
                 ) {
                     OutlinedTextField(
                         value = selectedStatus,
@@ -177,14 +238,14 @@ fun CreateTaskScreen(
                     )
                     ExposedDropdownMenu(
                         expanded = statusExpanded,
-                        onDismissRequest = { statusExpanded = false }
+                        onDismissRequest = { onStatusExpandedChange(false) }
                     ) {
                         statusOptions.forEach { option ->
                             DropdownMenuItem(
                                 text = { Text(option) },
                                 onClick = {
-                                    selectedStatus = option
-                                    statusExpanded = false
+                                    onSelectedStatusChange(option)
+                                    onStatusExpandedChange(false)
                                 }
                             )
                         }
@@ -195,7 +256,7 @@ fun CreateTaskScreen(
 
                 OutlinedTextField(
                     value = dueDateText,
-                    onValueChange = { dueDateText = it },
+                    onValueChange = onDueDateTextChange,
                     label = { Text("Due date (ISO recommended)") },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !uiState.isLoading,
@@ -243,21 +304,15 @@ fun CreateTaskScreen(
                         val assignedTo = assignedToText.toIntOrNull()
 
                         when {
-                            title.isBlank() -> localError = "Title is required"
-                            projectId == null -> localError = "Valid project ID is required"
-                            assignedTo == null -> localError = "Valid assignee ID is required"
-                            dueDateText.isBlank() -> localError = "Due date is required"
+                            title.isBlank() -> onLocalErrorChange("Title is required")
+                            projectId == null -> onLocalErrorChange("Valid project ID is required")
+                            assignedTo == null -> onLocalErrorChange("Valid assignee ID is required")
+                            dueDateText.isBlank() -> onLocalErrorChange("Due date is required")
                             else -> {
-                                localError = null
-                                viewModel.createTask(
-                                    projectId = projectId,
-                                    assignedTo = assignedTo,
-                                    title = title.trim(),
-                                    description = description.trim(),
-                                    priority = selectedPriority,
-                                    status = selectedStatus,
-                                    dueDate = dueDateText.trim(),
-                                    onSuccess = onTaskCreated
+                                onLocalErrorChange(null)
+                                onCreateTask(
+                                    projectId, assignedTo, title.trim(), description.trim(),
+                                    selectedPriority, selectedStatus, dueDateText.trim()
                                 )
                             }
                         }
@@ -312,3 +367,36 @@ private fun fieldColors() = OutlinedTextFieldDefaults.colors(
 
     cursorColor = AppColors.PrimaryBlue
 )
+
+@Preview(name = "Light", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_NO)
+@Preview(name = "Dark", showBackground = true, widthDp = 390, heightDp = 844, uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun CreateTaskScreenPreview() {
+    TeamWorkTrackerTheme(dynamicColor = false) {
+        CreateTaskScreenContent(
+            uiState = MyTasksUiState(),
+            title = PreviewData.task.title,
+            onTitleChange = {},
+            description = PreviewData.task.description,
+            onDescriptionChange = {},
+            projectIdText = "1",
+            onProjectIdTextChange = {},
+            assignedToText = "12",
+            onAssignedToTextChange = {},
+            selectedPriority = "medium",
+            onSelectedPriorityChange = {},
+            priorityExpanded = false,
+            onPriorityExpandedChange = {},
+            selectedStatus = "new",
+            onSelectedStatusChange = {},
+            statusExpanded = false,
+            onStatusExpandedChange = {},
+            dueDateText = PreviewData.task.dueDate,
+            onDueDateTextChange = {},
+            localError = null,
+            onLocalErrorChange = {},
+            onCreateTask = { _, _, _, _, _, _, _ -> },
+            onBack = {}
+        )
+    }
+}
