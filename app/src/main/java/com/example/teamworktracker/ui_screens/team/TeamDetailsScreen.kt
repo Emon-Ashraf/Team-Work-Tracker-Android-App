@@ -230,7 +230,7 @@ fun TeamDetailsScreen(
                             }
 
                             Spacer(modifier = Modifier.height(12.dp))
-                            Divider(color = AppColors.Border.copy(alpha = 0.6f))
+                            HorizontalDivider(color = AppColors.Border.copy(alpha = 0.6f))
                             Spacer(modifier = Modifier.height(10.dp))
 
                             InfoRow(label = "Created by", value = team.createdBy.toString())

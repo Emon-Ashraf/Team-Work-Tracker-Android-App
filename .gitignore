@@ -14,7 +14,7 @@ local.properties
 out/
 
 # App build outputs
-app/build/
+gradle/app/build/
 
 # Keystore (if you ever add)
 *.jks

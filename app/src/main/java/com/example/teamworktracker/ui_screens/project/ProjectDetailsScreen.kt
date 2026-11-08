@@ -85,7 +85,7 @@ fun ProjectDetailsScreen(
                         Text(project.name, style = MaterialTheme.typography.titleLarge, color = Color.White)
                         Text(project.description, style = MaterialTheme.typography.bodySmall, color = AppColors.MutedText)
 
-                        Divider(color = AppColors.Border.copy(alpha = 0.6f))
+                        HorizontalDivider(color = AppColors.Border.copy(alpha = 0.6f))
 
                         InfoRow("Project ID", project.id.toString())
                         InfoRow("Team ID", project.teamId.toString())
