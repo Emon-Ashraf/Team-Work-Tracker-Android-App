@@ -38,9 +38,59 @@ Task details refresh when the screen resumes. Task data, comments, and attachmen
 
 ## Screenshots
 
-Application screenshots are not currently included in this repository. The expected `docs/screenshots/` directory was absent when the documentation was prepared, so no gallery or image links are published here.
+Explore the application by workflow below. Select an image to view its original resolution. All screenshots retain their original content and quality; the gallery displays them at a consistent width with natural wrapping on narrower screens.
 
-Compose previews are available in the screen source files for inspecting the UI in Android Studio. They use sample data and are not captured application screenshots.
+The images include sample content and illustrate the UI. Integration status remains as documented in [Development status](#development-status); in particular, registration currently performs local validation only.
+
+### Authentication
+
+<p align="center">
+  <a href="docs/screenshots/login.png"><img src="docs/screenshots/login.png" alt="1. Login screen with email and password fields" width="240"></a>
+  &nbsp;
+  <a href="docs/screenshots/registration.png"><img src="docs/screenshots/registration.png" alt="2. Registration form with email, username, full name, and password fields" width="240"></a>
+</p>
+
+<p align="center"><sub><b>1. Login</b> — Email and password entry.<br><b>2. Registration</b> — Account form with local validation.</sub></p>
+
+### Dashboard
+
+<p align="center">
+  <a href="docs/screenshots/dashboard.png"><img src="docs/screenshots/dashboard.png" alt="Dashboard with My Tasks and Teams shortcuts, task counts, and upcoming task cards" width="240"></a>
+</p>
+
+<p align="center"><sub><b>Dashboard</b> — Task summary, due-date-ordered task preview, and shortcuts to My Tasks and Teams.</sub></p>
+
+### Teams
+
+<p align="center">
+  <a href="docs/screenshots/teams.png"><img src="docs/screenshots/teams.png" alt="1. Teams list with Create Team and Join Team actions" width="240"></a>
+  &nbsp;
+  <a href="docs/screenshots/team-details.png"><img src="docs/screenshots/team-details.png" alt="2. Team details showing metadata, members, and the Open Projects action" width="240"></a>
+  &nbsp;
+  <a href="docs/screenshots/create-team.png"><img src="docs/screenshots/create-team.png" alt="3. Create Team form with team name and description" width="240"></a>
+</p>
+
+<p align="center"><sub><b>1. Teams</b> — Team list and create/join entry points.<br><b>2. Team details</b> — Team metadata, member IDs, and project navigation.<br><b>3. Create team</b> — Name and description form.</sub></p>
+
+### Projects
+
+<p align="center">
+  <a href="docs/screenshots/projects.png"><img src="docs/screenshots/projects.png" alt="Projects list for a team, showing project statuses and the Create Project action" width="240"></a>
+</p>
+
+<p align="center"><sub><b>Projects</b> — Projects within a team, with status labels and a create-project entry point.</sub></p>
+
+### Task management
+
+<p align="center">
+  <a href="docs/screenshots/my-tasks.png"><img src="docs/screenshots/my-tasks.png" alt="1. My Tasks list with status, priority, due date, and project ID on each task card" width="240"></a>
+  &nbsp;
+  <a href="docs/screenshots/create-task.png"><img src="docs/screenshots/create-task.png" alt="2. Create Task form with title, description, project and assignee IDs, priority, status, and deadline section" width="240"></a>
+  &nbsp;
+  <a href="docs/screenshots/task-details.png"><img src="docs/screenshots/task-details.png" alt="3. Task details showing task metadata, edit and delete actions, a comment, and attachment information" width="240"></a>
+</p>
+
+<p align="center"><sub><b>1. My Tasks</b> — Assigned work with status and priority badges.<br><b>2. Create task</b> — Task details, assignment, priority, status, and deadline fields.<br><b>3. Task details</b> — Metadata, comments, attachment information, and task actions.</sub></p>
 
 ## Technology stack
 
@@ -157,6 +207,7 @@ Team-Work-Tracker-Android-App/
 │       │   └── res/                    # Icons, strings, themes, backup rules
 │       ├── test/                       # Example local unit test
 │       └── androidTest/                # Example instrumentation test
+├── docs/screenshots/                # Original application screenshots
 ├── gradle/
 │   ├── libs.versions.toml
 │   ├── gradle-daemon-jvm.properties
@@ -280,7 +331,7 @@ These are suggestions, not implemented features or delivery commitments:
 - Stream uploads, preserve original filenames, and support opening attachments.
 - Separate debug/release endpoint and logging configuration, use HTTPS, and validate dependency/toolchain compatibility in CI.
 - Add repository, ViewModel, navigation, and Compose UI tests for the primary workflows.
-- Include verified application screenshots in `docs/screenshots/` and publish a grouped gallery.
+- Expand screenshot coverage as additional screens and workflows are completed.
 
 ## Author
 
